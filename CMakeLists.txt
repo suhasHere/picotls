@@ -55,7 +55,8 @@ SET(MINICRYPTO_LIBRARY_FILES
 SET(CORE_FILES
     lib/hpke.c
     lib/picotls.c
-    lib/pembase64.c)
+    lib/pembase64.c
+    lib/batch.c)
 SET(CORE_TEST_FILES
     t/hpke.c
     t/picotls.c

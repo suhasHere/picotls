@@ -1884,6 +1884,24 @@ static size_t ptls_aead_encrypt_update(ptls_aead_context_t *ctx, void *output, c
  */
 static size_t ptls_aead_encrypt_final(ptls_aead_context_t *ctx, void *output);
 /**
+ * Batch encrypt: encrypts up to `count` packets with different AEAD contexts.
+ * Each entry has its own context (key), input, output, sequence number, and AAD.
+ * Uses AES-NI pipelining to process multiple encryptions in parallel.
+ * Returns 0 on success.
+ */
+typedef struct st_ptls_aead_batch_entry_t {
+    ptls_aead_context_t *ctx;
+    void *output;
+    const void *input;
+    size_t inlen;
+    uint64_t seq;
+    const void *aad;
+    size_t aadlen;
+    size_t outlen;  /* output: encrypted length */
+} ptls_aead_batch_entry_t;
+
+int ptls_aead_encrypt_batch(ptls_aead_batch_entry_t *entries, size_t count);
+/**
  * decrypts an AEAD record
  * @return number of bytes emitted to output if successful, or SIZE_MAX if the input is invalid (e.g. broken MAC)
  */
