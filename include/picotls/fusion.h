@@ -121,6 +121,37 @@ extern ptls_aead_algorithm_t ptls_non_temporal_aes128gcm, ptls_non_temporal_aes2
 extern ptls_cipher_algorithm_t ptls_fusion_quiclb;
 
 /**
+ * Batch-encrypts multiple AES-GCM packets with different keys in parallel.
+ *
+ * Interleaves AES-NI rounds across up to 8 packets to fill the CPU pipeline,
+ * achieving near-linear throughput scaling. Each packet uses its own context
+ * (key schedule), IV, AAD, and plaintext.
+ *
+ * @param ctxs     array of N AES-GCM contexts (different keys)
+ * @param outputs  array of N output buffers (must hold inlen + 16 bytes for tag)
+ * @param inputs   array of N input (plaintext) buffers
+ * @param inlens   array of N input lengths
+ * @param ivs      array of N IVs (pre-computed: seq XORed with static_iv)
+ * @param aads     array of N AAD buffers
+ * @param aadlens  array of N AAD lengths
+ * @param count    number of operations (1-8)
+ */
+void ptls_fusion_aesgcm_encrypt_batch(ptls_fusion_aesgcm_context_t **ctxs, void **outputs, const void **inputs,
+                                      const size_t *inlens, __m128i *ivs, const void **aads, const size_t *aadlens, size_t count);
+
+/**
+ * High-level batch encryption entry point that works with ptls_aead_batch_entry_t.
+ *
+ * Extracts fusion internals (aesgcm context, static_iv) from each entry,
+ * computes counters, and calls ptls_fusion_aesgcm_encrypt_batch.
+ *
+ * @param entries  array of batch entries (each with its own AEAD context)
+ * @param count    number of entries (1-8)
+ * @return 0 on success
+ */
+int ptls_fusion_aead_encrypt_batch(ptls_aead_batch_entry_t *entries, size_t count);
+
+/**
  * Returns a boolean indicating if fusion can be used.
  */
 int ptls_fusion_is_supported_by_cpu(void);

@@ -180,7 +180,7 @@ ELSE ()
 ENDIF ()
 
 IF (WITH_FUSION)
-    ADD_LIBRARY(picotls-fusion lib/fusion.c)
+    ADD_LIBRARY(picotls-fusion lib/fusion.c lib/fusion_batch.c)
     SET_TARGET_PROPERTIES(picotls-fusion PROPERTIES COMPILE_FLAGS "-mavx2 -maes -mpclmul -mvaes -mvpclmulqdq")
     TARGET_LINK_LIBRARIES(picotls-fusion picotls-core)
     ADD_EXECUTABLE(test-fusion.t
