@@ -50,7 +50,15 @@ int ptls_aead_encrypt_batch(ptls_aead_batch_entry_t *entries, size_t count)
         return ptls_fusion_aead_encrypt_batch(entries, count);
 #endif
 
-    /* Fallback: sequential encryption */
+    /* Sequential fallback — still benefits from:
+     * - ARM Crypto Extensions (via OpenSSL) on Graviton
+     * - AES-NI at single-packet level on x86 without fusion
+     * - Reduced function call overhead vs N separate ptls_aead_encrypt calls
+     *
+     * ARM NEON batch path (4-way interleaved using vaeseq_u8) is a future
+     * optimization — ARM CE has 4-cycle latency / 1-cycle throughput similar
+     * to x86 AES-NI, so 4-way interleaving is optimal on Graviton3/4.
+     */
     batch_sequential(entries, count);
     return 0;
 }
