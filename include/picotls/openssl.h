@@ -245,6 +245,14 @@ int ptls_openssl_decrypt_ticket_evp(ptls_buffer_t *dst, ptls_iovec_t src,
                                     int (*cb)(unsigned char *, unsigned char *, EVP_CIPHER_CTX *, EVP_MAC_CTX *, int));
 #endif
 
+/**
+ * QUIC-RT: GMAC passthrough AEAD.
+ * Provides authentication without encryption for pre-encrypted payloads.
+ * Setup: ptls_gmac_setup_crypto(ctx, is_enc, key, iv)
+ * The key/iv should match the connection's AES-128-GCM key.
+ */
+int ptls_gmac_setup_crypto(ptls_aead_context_t *ctx, int is_enc, const void *key, const void *iv);
+
 #ifdef __cplusplus
 }
 #endif
