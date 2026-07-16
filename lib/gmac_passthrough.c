@@ -52,6 +52,12 @@ static void gmac_do_encrypt(ptls_aead_context_t *_ctx, void *output,
     const void *input, size_t inlen, uint64_t seq,
     const void *aad, size_t aadlen, ptls_aead_supplementary_encryption_t *supp)
 {
+    static int gmac_enc_count = 0;
+    if (++gmac_enc_count <= 5) {
+        fprintf(stderr, "[GMAC] encrypt #%d: inlen=%zu aadlen=%zu seq=%llu\n",
+                gmac_enc_count, inlen, aadlen, (unsigned long long)seq);
+        fflush(stderr);
+    }
     struct gmac_context_t *ctx = (struct gmac_context_t *)_ctx;
     uint8_t iv[PTLS_MAX_IV_SIZE];
     int blocklen, ret;
@@ -95,6 +101,12 @@ static size_t gmac_do_decrypt(ptls_aead_context_t *_ctx, void *output,
     const void *input, size_t inlen, uint64_t seq,
     const void *aad, size_t aadlen)
 {
+    static int gmac_dec_count = 0;
+    if (++gmac_dec_count <= 5) {
+        fprintf(stderr, "[GMAC] decrypt #%d: inlen=%zu aadlen=%zu seq=%llu\n",
+                gmac_dec_count, inlen, aadlen, (unsigned long long)seq);
+        fflush(stderr);
+    }
     struct gmac_context_t *ctx = (struct gmac_context_t *)_ctx;
     uint8_t iv[PTLS_MAX_IV_SIZE];
     int blocklen, ret;
@@ -129,8 +141,18 @@ static size_t gmac_do_decrypt(ptls_aead_context_t *_ctx, void *output,
         return SIZE_MAX;
 
     /* Verify tag */
-    if (!EVP_DecryptFinal_ex(ctx->evp_ctx, (uint8_t *)output + payload_len, &blocklen))
+    if (!EVP_DecryptFinal_ex(ctx->evp_ctx, (uint8_t *)output + payload_len, &blocklen)) {
+        if (gmac_dec_count <= 5) {
+            fprintf(stderr, "[GMAC] decrypt FAILED tag verify! inlen=%zu\n", inlen);
+            fflush(stderr);
+        }
         return SIZE_MAX;
+    }
+
+    if (gmac_dec_count <= 5) {
+        fprintf(stderr, "[GMAC] decrypt OK! payload=%zu\n", payload_len);
+        fflush(stderr);
+    }
 
     /* Copy payload to output (passthrough) */
     memcpy(output, input, payload_len);
